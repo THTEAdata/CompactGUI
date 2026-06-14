@@ -106,7 +106,7 @@ LZX|压缩率最高，解压速度最慢|适合用于存档文件、备份数据
 
 ### 喜欢这个项目吗？
 
- 请考虑在 Ko-Fi 上打赏一下原作者 :)
+ 请考虑在 Ko-Fi 上打赏一下 :)
 
  <p align="left"><a href='https://ko-fi.com/iridiumio' target='_blank'><img height='42' style='border:0px;height:42px;' src='https://cdn.ko-fi.com/cdn/kofi3.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a></p>
   

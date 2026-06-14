@@ -235,7 +235,8 @@
                                        Margin="50 20 0 0" HorizontalAlignment="Left" VerticalAlignment="Top"
                                        FontSize="12" Foreground="#80FFFFFF"
                                        Text="{Binding Folder, Converter={StaticResource TokenisedFolderPathConverter}}"
-                                       TextTrimming="CharacterEllipsis">
+                                       TextTrimming="CharacterEllipsis"
+                                       Cursor="Hand" MouseLeftButtonDown="FolderPathTextBlock_MouseLeftButtonDown">
                                 <TextBlock.ToolTip>
                                     <ToolTip MaxWidth="500" Placement="RelativePoint">
                                         <TextBlock FontSize="12" Foreground="#FFBFC7CE"

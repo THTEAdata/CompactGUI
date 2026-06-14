@@ -3,9 +3,10 @@ Imports System.Globalization
 Public Class DecimalToPercentageConverter : Implements IValueConverter
     Public Function Convert(value As Object, targetType As Type, parameter As Object, culture As CultureInfo) As Object Implements IValueConverter.Convert
         'IF = invert and format, to show the "percentage smaller" text
-        If parameter = "IF" Then Return CInt(100 - (CType(value, Decimal) * 100)) & "%"
-        If parameter = "I" Then Return CInt(100 - (CType(value, Decimal) * 100))
-        Return CInt(CType(value, Decimal) * 100)
+        If value Is Nothing OrElse value Is DBNull.Value Then Return "0%"
+        If parameter = "IF" Then Return CInt(100 - (CDec(value) * 100)) & "%"
+        If parameter = "I" Then Return CInt(100 - (CDec(value) * 100))
+        Return CInt(CDec(value) * 100)
     End Function
 
     Public Function ConvertBack(value As Object, targetType As Type, parameter As Object, culture As CultureInfo) As Object Implements IValueConverter.ConvertBack
@@ -230,7 +231,8 @@ End Class
 
 Public Class ProgressBarColorConverter : Implements IValueConverter
     Public Function Convert(value As Object, targetType As Type, parameter As Object, culture As CultureInfo) As Object Implements IValueConverter.Convert
-        Dim progress As Decimal = DirectCast(value, Decimal)
+        If value Is Nothing OrElse value Is DBNull.Value Then Return New SolidColorBrush(Color.FromRgb(146, 241, 171))
+        Dim progress As Decimal = CDec(value)
 
         If progress > 0.6 Then
             Return New SolidColorBrush(Color.FromRgb(239, 146, 146))

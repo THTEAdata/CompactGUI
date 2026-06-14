@@ -1,4 +1,4 @@
-﻿
+
 using CompactGUI.Logging.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -125,12 +125,15 @@ public sealed class Compactor : ICompressor, IDisposable
     {
         uint clusterSize = SharedMethods.GetClusterSize(workingDirectory);
 
-        
         var analysedFiles = await _analyser.GetAnalysedFilesAsync(cancellationTokenSource.Token);
 
-        var filesList = analysedFiles?
+        if (analysedFiles == null)
+            return Enumerable.Empty<FileDetails>();
+
+        var filesList = analysedFiles
             .Where(fl =>
-                fl.CompressionMode != wofCompressionAlgorithm
+                fl != null
+                && fl.CompressionMode != wofCompressionAlgorithm
                 && fl.UncompressedSize > clusterSize
                 && ((fl.FileInfo != null && !excludedFileExtensions.Contains(fl.FileInfo.Extension)) || excludedFileExtensions.Contains(fl.FileName))
             )

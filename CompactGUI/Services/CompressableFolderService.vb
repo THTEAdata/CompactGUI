@@ -116,20 +116,30 @@ Public Class CompressableFolderService
         Dim estimatedData As List(Of (AnalysedFile As AnalysedFileDetails, CompressionRatio As Single)) = Nothing
 
         Try
+            If folder.AnalysisResults Is Nothing OrElse folder.AnalysisResults.Count = 0 Then
+                folder.IsGettingEstimate = False
+                Return
+            End If
             estimatedData = Await Task.Run(Function() estimator.EstimateCompression(folder.AnalysisResults.ToList, IsHDD(folder), GetThreadCount(folder), Core.SharedMethods.GetClusterSize(folder.FolderName), cts.Token))
 
-        Catch ex As AggregateException
+        Catch ex As Exception
             folder.IsGettingEstimate = False
             Return
         End Try
 
+        If estimatedData Is Nothing Then
+            folder.IsGettingEstimate = False
+            Return
+        End If
+
+        folder.WikiPoorlyCompressedFiles.Clear()
         For Each item In estimatedData
-            If item.CompressionRatio >= 0.98 AndAlso item.AnalysedFile.FileName <> "" Then
+            If item.AnalysedFile IsNot Nothing AndAlso item.CompressionRatio >= 0.98 AndAlso Not String.IsNullOrEmpty(item.AnalysedFile.FileName) Then
                 folder.WikiPoorlyCompressedFiles.Add(item.AnalysedFile.FileName)
             End If
         Next
 
-        Dim estimatedAfterBytes = estimatedData.Sum(Function(x) x.AnalysedFile.UncompressedSize * x.CompressionRatio)
+        Dim estimatedAfterBytes = estimatedData.Where(Function(x) x.AnalysedFile IsNot Nothing).Sum(Function(x) x.AnalysedFile.UncompressedSize * x.CompressionRatio)
 
         'This is absolutely stupid
 

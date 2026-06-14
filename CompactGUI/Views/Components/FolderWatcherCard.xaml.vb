@@ -1,3 +1,5 @@
+Imports System.Diagnostics
+Imports System.Windows.Input
 Imports System.Windows.Media.Animation
 
 Public Class FolderWatcherCard : Inherits UserControl
@@ -106,6 +108,24 @@ Public Class FolderWatcherCard : Inherits UserControl
                 End If
             End If
         End If
+    End Sub
+
+    ''' <summary>
+    ''' 点击文件夹路径时在文件资源管理器中打开
+    ''' </summary>
+    Private Sub FolderPathTextBlock_MouseLeftButtonDown(sender As Object, e As MouseButtonEventArgs)
+        Dim fe = TryCast(sender, FrameworkElement)
+        If fe IsNot Nothing AndAlso fe.DataContext IsNot Nothing Then
+            Dim wf = TryCast(fe.DataContext, Watcher.WatchedFolder)
+            If wf IsNot Nothing AndAlso Not String.IsNullOrEmpty(wf.Folder) Then
+                Try
+                    Process.Start("explorer.exe", wf.Folder)
+                Catch ex As Exception
+                    Debug.WriteLine($"打开文件夹失败: {ex.Message}")
+                End Try
+            End If
+        End If
+        e.Handled = True
     End Sub
 
 End Class

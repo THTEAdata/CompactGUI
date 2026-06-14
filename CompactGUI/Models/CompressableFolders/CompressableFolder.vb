@@ -53,6 +53,7 @@ Public MustInherit Class CompressableFolder : Inherits ObservableObject : Implem
     Public ReadOnly Property CompressionRatio As Decimal
         Get
             If CompressedBytes = 0 Then Return 0
+            If UncompressedBytes = 0 Then Return 0
             Return CompressedBytes / UncompressedBytes
         End Get
     End Property
@@ -60,8 +61,19 @@ Public MustInherit Class CompressableFolder : Inherits ObservableObject : Implem
 
     Public ReadOnly Property GlobalPoorlyCompressedFileCount
         Get
-            If AnalysisResults Is Nothing OrElse Application.GetService(Of ISettingsService).AppSettings.NonCompressableList.Count = 0 Then Return 0
-            Return AnalysisResults.Where(Function(fl) Application.GetService(Of ISettingsService).AppSettings.NonCompressableList.Contains(New IO.FileInfo(fl.FileName).Extension)).Count
+            If AnalysisResults Is Nothing OrElse AnalysisResults.Count = 0 Then Return 0
+            Dim settingsService = Application.GetService(Of ISettingsService)
+            If settingsService Is Nothing Then Return 0
+            Dim appSettings = settingsService.AppSettings
+            If appSettings Is Nothing OrElse appSettings.NonCompressableList Is Nothing OrElse appSettings.NonCompressableList.Count = 0 Then Return 0
+            Return AnalysisResults.Where(Function(fl)
+                If fl Is Nothing OrElse fl.FileName Is Nothing Then Return False
+                Try
+                    Return appSettings.NonCompressableList.Contains(New IO.FileInfo(fl.FileName).Extension)
+                Catch
+                    Return False
+                End Try
+            End Function).Count
         End Get
     End Property
 

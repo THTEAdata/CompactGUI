@@ -1,4 +1,4 @@
-﻿
+
 Imports System
 Imports System.IO
 Imports System.Net.Http
@@ -39,8 +39,15 @@ Public Class SteamFolder : Inherits CompressableFolder
 
     Public Overloads ReadOnly Property WikiPoorlyCompressedFilesCount As Integer
         Get
-            If AnalysisResults Is Nothing OrElse WikiPoorlyCompressedFiles Is Nothing Then Return 0
-            Return AnalysisResults.Where(Function(fl) WikiPoorlyCompressedFiles.Contains(New FileInfo(fl.FileName).Extension)).Count
+            If AnalysisResults Is Nothing OrElse AnalysisResults.Count = 0 OrElse WikiPoorlyCompressedFiles Is Nothing Then Return 0
+            Return AnalysisResults.Where(Function(fl)
+                If fl Is Nothing OrElse fl.FileName Is Nothing Then Return False
+                Try
+                    Return WikiPoorlyCompressedFiles.Contains(New FileInfo(fl.FileName).Extension)
+                Catch
+                    Return False
+                End Try
+            End Function).Count
         End Get
     End Property
 

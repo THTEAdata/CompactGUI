@@ -483,6 +483,47 @@
 
                 </ui:CardExpander>
 
+                <Separator Height="1" />
+
+                <!-- ========== 新增：功能开关 ========== -->
+                <ui:CardExpander Margin="-15 0"
+                                 Background="Transparent" BorderBrush="Transparent" ContentPadding="0" FlowDirection="RightToLeft" IsExpanded="True"
+                                 Style="{StaticResource CustomCardExpanderStyle}">
+                    <ui:CardExpander.Header>
+                        <Label Margin="10 0"
+                               d:Content="Feature Toggles"
+                               Content="功能开关"
+                               FlowDirection="LeftToRight" />
+
+                    </ui:CardExpander.Header>
+
+                    <StackPanel Margin="15 -10 15 10" FlowDirection="LeftToRight">
+                        <StackPanel Margin="-10 10 0 0">
+                            <CheckBox x:Name="UiEnableFileTypeAnalysis"
+                                      Margin="0 -3"
+                                      d:Content="Show File Type Analysis panel"
+                                      Content="📊 文件类型分析"
+                                      IsChecked="{Binding AppSettings.EnableFileTypeAnalysis}" />
+                            <CheckBox x:Name="UiEnableTopFilesList"
+                                      Margin="0 -3"
+                                      d:Content="Show Top Files list"
+                                      Content="🏆 Top 文件排行榜"
+                                      IsChecked="{Binding AppSettings.EnableTopFilesList}" />
+                            <CheckBox x:Name="UiEnableCsvExport"
+                                      Margin="0 -3"
+                                      d:Content="Show CSV Export button"
+                                      Content="📥 CSV 导出按钮"
+                                      IsChecked="{Binding AppSettings.EnableCsvExport}" />
+                            <CheckBox x:Name="UiEnablePerformanceMonitor"
+                                      Margin="0 -3"
+                                      d:Content="Show Performance Monitor"
+                                      Content="📈 实时性能监控"
+                                      IsChecked="{Binding AppSettings.EnablePerformanceMonitor}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                </ui:CardExpander>
+
 
 
             </StackPanel>

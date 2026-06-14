@@ -1,4 +1,4 @@
-﻿Imports CommunityToolkit.Mvvm.Input
+Imports CommunityToolkit.Mvvm.Input
 
 Imports CompactGUI.Core.SharedMethods
 Imports CompactGUI.Logging
@@ -16,6 +16,25 @@ Public Class CustomSnackBarService
     Public Sub New(logger As ILogger(Of CustomSnackBarService))
         MyBase.New()
         Me.logger = logger
+    End Sub
+
+    ' 绕过基类 Show 方法（WPF-UI v4 签名变更），直接操作 _snackbar
+    Private Sub ShowSnackbar(title As String, message As String, appearance As ControlAppearance, icon As IconElement, timeout As TimeSpan)
+        If GetSnackbarPresenter() Is Nothing Then Throw New InvalidOperationException(LanguageHelper.GetString("SnackBar_SnackbarPresenter"))
+        If _snackbar Is Nothing Then _snackbar = New Snackbar(GetSnackbarPresenter())
+
+        _snackbar.SetCurrentValue(Snackbar.TitleProperty, title)
+        _snackbar.SetCurrentValue(ContentControl.ContentProperty, message)
+        _snackbar.SetCurrentValue(Snackbar.AppearanceProperty, appearance)
+        _snackbar.SetCurrentValue(Snackbar.IconProperty, icon)
+        _snackbar.SetCurrentValue(Snackbar.TimeoutProperty, timeout)
+
+        _snackbar.Show(True)
+    End Sub
+
+    ''' <summary>便捷重载：仅传消息文本，使用默认外观（Success，5秒超时）</summary>
+    Public Overloads Sub Show(message As String)
+        ShowSnackbar("CompactGUI", message, ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(5))
     End Sub
 
     Public Sub ShowCustom(message As UIElement, title As String, appearance As ControlAppearance, Optional icon As IconElement = Nothing, Optional timeout As TimeSpan = Nothing)
@@ -46,7 +65,7 @@ Public Class CustomSnackBarService
             messageString &= $"{InvalidFolders(i)}: {GetFolderVerificationMessage(InvalidMessages(i))}" & vbCrLf
         Next
 
-        Show("Invalid Folders", messageString, Wpf.Ui.Controls.ControlAppearance.Danger, Nothing, TimeSpan.FromSeconds(10))
+        ShowSnackbar("Invalid Folders", messageString, Wpf.Ui.Controls.ControlAppearance.Danger, Nothing, TimeSpan.FromSeconds(10))
 
     End Sub
 
@@ -87,7 +106,7 @@ Public Class CustomSnackBarService
     End Sub
 
     Public Sub ShowFailedToSubmitToWiki()
-        Show(LanguageHelper.GetString("SnackBar_SubmitWikiFailed"), LanguageHelper.GetString("SnackBar_SubmitWikiFailedTip"), Wpf.Ui.Controls.ControlAppearance.Danger, Nothing, TimeSpan.FromSeconds(5))
+        ShowSnackbar(LanguageHelper.GetString("SnackBar_SubmitWikiFailed"), LanguageHelper.GetString("SnackBar_SubmitWikiFailedTip"), Wpf.Ui.Controls.ControlAppearance.Danger, Nothing, TimeSpan.FromSeconds(5))
         '"Failed to submit to wiki", "Please check your internet connection and try again"
         SnackbarServiceLog.ShowFailedToSubmitToWiki(logger)
     End Sub
@@ -100,31 +119,31 @@ Public Class CustomSnackBarService
                            $"{LanguageHelper.GetString("SnackBar_SubmitWiki_Compression")}: {compressionName}"
         'Show("Submitted to wiki", $"UID: {0}{1}Game: {2}{1}SteamID: {3}{1}Compression: {4}
 
-        Show(LanguageHelper.GetString("SnackBar_SubmitWikiTitle"), message, Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(10))
+        ShowSnackbar(LanguageHelper.GetString("SnackBar_SubmitWikiTitle"), message, Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(10))
         SnackbarServiceLog.ShowSubmittedToWiki(logger, steamsubmitdata.UID, steamsubmitdata.GameName, steamsubmitdata.SteamID, steamsubmitdata.CompressionMode)
     End Sub
 
 
     Public Sub ShowAppliedToAllFolders()
-        Show(LanguageHelper.GetString("SnackBar_AppliedAllFolders"), LanguageHelper.GetString("SnackBar_AppliedAllFoldersTip"), Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(5))
+        ShowSnackbar(LanguageHelper.GetString("SnackBar_AppliedAllFolders"), LanguageHelper.GetString("SnackBar_AppliedAllFoldersTip"), Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(5))
         '"Applied to all folders", "Compression options have been applied to all folders"
         SnackbarServiceLog.ShowAppliedToAllFolders(logger)
     End Sub
 
     Public Sub ShowCannotRemoveFolder()
-        Show(LanguageHelper.GetString("SnackBar_CannotRemoveFolder"), LanguageHelper.GetString("SnackBar_CannotRemoveFolderTip"), Wpf.Ui.Controls.ControlAppearance.Caution, Nothing, TimeSpan.FromSeconds(5))
+        ShowSnackbar(LanguageHelper.GetString("SnackBar_CannotRemoveFolder"), LanguageHelper.GetString("SnackBar_CannotRemoveFolderTip"), Wpf.Ui.Controls.ControlAppearance.Caution, Nothing, TimeSpan.FromSeconds(5))
         '"Cannot remove folder", "Please wait until the current operation is finished"
         SnackbarServiceLog.ShowCannotRemoveFolder(logger)
     End Sub
 
     Public Sub ShowAddedToQueue()
-        Show(LanguageHelper.GetString("SnackBar_Success"), LanguageHelper.GetString("SnackBar_SuccessTip"), Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(5))
+        ShowSnackbar(LanguageHelper.GetString("SnackBar_Success"), LanguageHelper.GetString("SnackBar_SuccessTip"), Wpf.Ui.Controls.ControlAppearance.Success, Nothing, TimeSpan.FromSeconds(5))
         '"Success", "Added to Queue"
         SnackbarServiceLog.ShowAddedToQueue(logger)
     End Sub
 
     Public Sub ShowDirectStorageWarning(displayName As String)
-        Show(displayName,
+        ShowSnackbar(displayName,
             LanguageHelper.GetString("SnackBar_DirectStorageTechnology"),
             Wpf.Ui.Controls.ControlAppearance.Info,
             Nothing,

@@ -9,13 +9,16 @@
   <Folder Name="/Solution Items/">
     <File Path="README.md" />
   </Folder>
-  <Project Path="CompactGUI.Core/CompactGUI.Core.csproj" />
-  <Project Path="CompactGUI.CoreVB/CompactGUI.CoreVB.vbproj" />
+  <Project Path="CompactGUI/CompactGUI.vbproj" Id="51b88a8f-bb68-401f-b5c2-87f101ed9681" />
+  <Project Path="CompactGUI.Core/CompactGUI.Core.csproj" Id="2fd515f4-f1c4-4c43-bb2d-5bfb7083aeec" />
+  <Project Path="CompactGUI.CoreVB/CompactGUI.CoreVB.vbproj" Id="061f497c-8e32-4c1f-a865-1440d4198ae4" />
   <Project Path="CompactGUI.Logging/CompactGUI.Logging.csproj" Id="d21e36f8-54bb-401e-9621-b87d03488806" />
   <Project Path="CompactGUI.TestingGround/CompactGUI.TestingGround.csproj" Id="279814db-5112-4c5f-b013-df80d73bcf37" />
-  <Project Path="CompactGUI.Watcher/CompactGUI.Watcher.vbproj">
+  <Project Path="CompactGUI.Watcher/CompactGUI.Watcher.vbproj" Id="046dc613-3afe-478c-b7b9-f274ab2c0e1e">
     <BuildDependency Project="CompactGUI.CoreVB/CompactGUI.CoreVB.vbproj" />
   </Project>
   <Project Path="CompactGUI.WatcherCS/CompactGUI.WatcherCS.csproj" Id="2f8f22c2-66d8-4ac7-ab11-bc1e1086d6c4" />
-  <Project Path="CompactGUI/CompactGUI.vbproj" />
+  <Properties>
+    <StartupProjects>51b88a8f-bb68-401f-b5c2-87f101ed9681</StartupProjects>
+  </Properties>
 </Solution>
