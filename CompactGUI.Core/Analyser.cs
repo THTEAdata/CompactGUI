@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security;
 using CompactGUI.Logging.Core;
 
 namespace CompactGUI.Core;
@@ -109,15 +110,30 @@ public sealed class Analyser : IDisposable
             long uncompressedSize = fileInfo.Length;
             long compressedSize = SharedMethods.GetFileSizeOnDisk(file);
             compressedSize = compressedSize < 0 ? 0 : compressedSize;
-            WOFCompressionAlgorithm compressionMode = (compressedSize == uncompressedSize)
-                ? WOFCompressionAlgorithm.NO_COMPRESSION
-                : WOFHelper.DetectCompression(fileInfo);
+            WOFCompressionAlgorithm compressionMode;
+            try
+            {
+                compressionMode = (compressedSize == uncompressedSize)
+                    ? WOFCompressionAlgorithm.NO_COMPRESSION
+                    : WOFHelper.DetectCompression(fileInfo);
+            }
+            catch
+            {
+                // 如果检测压缩算法失败，保守处理
+                compressionMode = WOFCompressionAlgorithm.NO_COMPRESSION;
+            }
 
             return new AnalysedFileDetails { FileName = file, CompressedSize = compressedSize, UncompressedSize = uncompressedSize, CompressionMode = compressionMode, FileInfo = fileInfo };
         }
-        catch (IOException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PathTooLongException or SecurityException)
         {
             AnalyserLog.ProcessingFileFailed(_logger, file, ex.Message);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // 兜底：不认识的异常也记录但不崩溃
+            AnalyserLog.ProcessingFileFailed(_logger, file, $"Unexpected error: {ex.Message}");
             return null;
         }
     }
@@ -125,8 +141,11 @@ public sealed class Analyser : IDisposable
 
     public List<ExtensionResult> GetPoorlyCompressedExtensions()
     {
+        if (_analysedFileDetails == null || _analysedFileDetails.Count == 0)
+            return new List<ExtensionResult>();
+
         // Only use PLINQ if the list is large enough to benefit from parallel processing
-        IEnumerable<AnalysedFileDetails> query = _analysedFileDetails?.Count <= 10000
+        IEnumerable<AnalysedFileDetails> query = _analysedFileDetails.Count <= 10000
             ? _analysedFileDetails
             : _analysedFileDetails.AsParallel();
 
@@ -143,6 +162,42 @@ public sealed class Analyser : IDisposable
                 .Where(r => r.CRatio > 0.95)
                 .ToList();
 
+    }
+
+    // ==== 新增：文件类型综合统计（全部扩展名，含压缩比排序）====
+    public List<FileTypeStat> GetFileTypeStats()
+    {
+        if (_analysedFileDetails == null || _analysedFileDetails.Count == 0)
+            return new List<FileTypeStat>();
+
+        IEnumerable<AnalysedFileDetails> query = _analysedFileDetails.Count <= 5000
+            ? _analysedFileDetails
+            : _analysedFileDetails.AsParallel().AsOrdered();
+
+        return query
+            .Where(fl => fl.UncompressedSize > 0)
+            .GroupBy(fl => Path.GetExtension(fl.FileName) ?? "(无扩展名)", StringComparer.OrdinalIgnoreCase)
+            .Select(g => new FileTypeStat
+            {
+                Extension = string.IsNullOrEmpty(g.Key) ? "(无扩展名)" : g.Key.ToLowerInvariant(),
+                FileCount = g.Count(),
+                UncompressedBytes = g.Sum(fl => fl.UncompressedSize),
+                CompressedBytes = g.Sum(fl => fl.CompressedSize)
+            })
+            .OrderByDescending(s => s.UncompressedBytes)
+            .ToList();
+    }
+
+    // ==== 新增：Top N 最大文件 ====
+    public List<AnalysedFileDetails> GetTopFiles(int count = 10)
+    {
+        if (_analysedFileDetails == null || _analysedFileDetails.Count == 0)
+            return new List<AnalysedFileDetails>();
+
+        return _analysedFileDetails
+            .OrderByDescending(f => f.UncompressedSize)
+            .Take(count)
+            .ToList();
     }
 
     public void Dispose()

@@ -20,6 +20,8 @@
             <RowDefinition Height="60" />
             <RowDefinition Height="60" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
@@ -109,9 +111,94 @@
         </WrapPanel>
 
 
-        <StackPanel Grid.Row="5" Grid.ColumnSpan="2"
+        <!-- ==== 新增：文件类型分析表格（可由功能开关关闭） ==== -->
+        <Grid Grid.Row="4" Grid.ColumnSpan="2"
+              Visibility="{Binding AppSettings.EnableFileTypeAnalysis, Converter={StaticResource BoolToVisConverter}}">
+            <Expander Margin="0,10,0,0"
+                      Header="{Binding FileTypeStats.Count, StringFormat='📊 文件类型分析 ({0} 种)'}"
+                      IsExpanded="False"
+                      Visibility="{Binding HasFileTypeStats, Converter={StaticResource BooleanToVisibilityConverter}}"
+                      Foreground="{StaticResource AccentTextFillColorPrimaryBrush}">
+                <ScrollViewer MaxHeight="250" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding FileTypeStats}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,2,0,2" Background="{StaticResource CardBackgroundFillColorSecondaryBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="90" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Extension}"
+                                               FontWeight="SemiBold" Margin="5,2" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1" Text="{Binding FileCount, StringFormat='{}{0} 个'}"
+                                               Margin="5,2" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2" Text="{Binding UncompressedSizeFormatted}"
+                                               Margin="5,2" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="3" Text="{Binding CompressedSizeFormatted}"
+                                               Margin="5,2" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="4"
+                                               Text="{Binding SpaceSavingPercent, StringFormat='{}{0:F1}%'}"
+                                               Margin="5,2" VerticalAlignment="Center"
+                                               Foreground="{StaticResource AccentFillColorDisabledBrush}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Expander>
+        </Grid>
+
+        <!-- ==== 新增：Top 15 最大文件列表（可由功能开关关闭） ==== -->
+        <Grid Grid.Row="5" Grid.ColumnSpan="2"
+              Visibility="{Binding AppSettings.EnableTopFilesList, Converter={StaticResource BoolToVisConverter}}">
+            <Expander Margin="0,5,0,0"
+                      Header="{Binding TopFilesList.Count, StringFormat='🏆 Top 最大文件 ({0})'}"
+                      IsExpanded="False"
+                      Foreground="{StaticResource AccentTextFillColorPrimaryBrush}">
+                <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding TopFilesList}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1,0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="120" />
+                                        <ColumnDefinition Width="100" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding FileName}"
+                                               TextTrimming="CharacterEllipsis" Margin="5,2" />
+                                    <TextBlock Grid.Column="1" Text="{Binding UncompressedSize, Converter={StaticResource BytesToReadableConverter}}"
+                                               HorizontalAlignment="Right" Margin="5,2" Foreground="{StaticResource AccentFillColorDisabledBrush}" />
+                                    <TextBlock Grid.Column="2" Text="{Binding CompressionMode}"
+                                               HorizontalAlignment="Center" Margin="5,2" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Expander>
+        </Grid>
+
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="2"
                     HorizontalAlignment="Right" VerticalAlignment="Bottom"
                     Orientation="Horizontal">
+
+            <!-- 新增：导出CSV按钮（可由功能开关关闭） -->
+            <ui:Button Width="140" Height="40"
+                       Margin="0 0 20 10"
+                       d:Content="Export CSV"
+                       Background="{StaticResource CardBackgroundFillColorSecondaryBrush}"
+                       Command="{Binding ExportResultsCsvCommand}"
+                       FontSize="16"
+                       Visibility="{Binding AppSettings.EnableCsvExport, Converter={StaticResource BoolToVisConverter}}">
+                <StackPanel Orientation="Horizontal">
+                    <ui:SymbolIcon Symbol="Document20" Filled="True" />
+                    <TextBlock Text="  CSV导出" Margin="5,0,0,0" />
+                </StackPanel>
+            </ui:Button>
 
             <ui:Button Width="140" Height="40"
                        Margin="0 0 0 10"

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.Logging;
 
 namespace CompactGUI.Core.Settings;
@@ -45,6 +45,12 @@ public partial class Settings : ObservableRecipient
     [ObservableProperty] private double windowHeight = 700;
     [ObservableProperty] private WindowState windowState = WindowState.Normal;
     [ObservableProperty] private bool alwaysShowDetailedCompressionMode = false;
+
+    // === 功能开关（新增） ===
+    [ObservableProperty] private bool enableFileTypeAnalysis = true;      // 文件类型分析面板
+    [ObservableProperty] private bool enableTopFilesList = true;          // Top 文件列表
+    [ObservableProperty] private bool enableCsvExport = true;             // CSV 导出按钮
+    [ObservableProperty] private bool enablePerformanceMonitor = true;    // 实时性能监控
 
     [ObservableProperty] private string language = "en-US";
 

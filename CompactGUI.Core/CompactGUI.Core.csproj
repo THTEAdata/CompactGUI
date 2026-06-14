@@ -1,9 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'"> 
@@ -24,5 +25,18 @@
   <ItemGroup>
     <ProjectReference Include="..\CompactGUI.Logging\CompactGUI.Logging.csproj" />
   </ItemGroup>
+
+  <!--
+    自动检测 CsWin32 是否已还原：
+    如果 NuGet 缓存中有 CsWin32 包，就定义 CSWIN32_GENERATED，
+    PInvoke.cs 中的手工声明会被条件编译跳过，避免重复。
+    如果包没还原（或离线/跳过还原），则 Fallback 到 PInvoke.cs。
+  -->
+  <Target Name="DetectCsWin32" BeforeTargets="BeforeCompile;CoreCompile">
+    <PropertyGroup>
+      <_CsWin32Pkg>$(NuGetPackageRoot)microsoft.windows.cswin32\0.3.183\</_CsWin32Pkg>
+      <DefineConstants Condition="Exists('$(_CsWin32Pkg)')">$(DefineConstants);CSWIN32_GENERATED</DefineConstants>
+    </PropertyGroup>
+  </Target>
 
 </Project>

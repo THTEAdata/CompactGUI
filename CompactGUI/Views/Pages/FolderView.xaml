@@ -8,60 +8,7 @@
              d:DataContext="{d:DesignInstance Type=local:FolderViewModel}"
              d:DesignHeight="580" d:DesignWidth="900" UseLayoutRounding="True"
              mc:Ignorable="d">
-    <UserControl.Resources>
 
-        <DataTemplate x:Key="IdleTemplate">
-            <local:PendingCompression DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-        </DataTemplate>
-
-        <DataTemplate x:Key="AnalysingTemplate">
-            <ui:ProgressRing HorizontalAlignment="Center" VerticalAlignment="Center"
-                             IsIndeterminate="True" />
-        </DataTemplate>
-
-        <DataTemplate x:Key="CompressingTemplate">
-            <StackPanel Margin="0,30"
-                        d:DataContext="{d:DesignInstance Type=local:FolderViewModel}"
-                        DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                <TextBlock Text="{Binding Folder.FolderActionState}"   
-                           HorizontalAlignment="Left"
-                            FontSize="16" FontWeight="SemiBold" />
-                <TextBlock Margin="0 5 0 0" Text="{Binding CompressionProgressFile, Mode=OneWay, Converter={StaticResource TokenisedFolderPathConverter}}"
-           HorizontalAlignment="Left" Foreground="{StaticResource AccentFillColorDisabledBrush}" 
-           TextTrimming="CharacterEllipsis" />
-                <ProgressBar Height="30"
-                             Margin="0 50 0 50"
-                             Background="{StaticResource CardBackground}"
-                             Foreground="#92F1AB"
-                             Value="{Binding CompressionProgress, Mode=OneWay}" />
-                
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" >
-                    <ui:Button Width="80" Height="35" Margin="0 0 20 0" Command="{Binding PauseCommand}">
-                        <ui:SymbolIcon Symbol="{Binding Folder.FolderActionState, Converter={StaticResource FolderWorkingStateToPauseSymbolConverter}}" Filled="True"/>
-                    </ui:Button>
-                    <ui:Button Width="80" Height="35" Command="{Binding CancelCommand}">
-                        <ui:SymbolIcon Symbol="Dismiss12" Foreground="{StaticResource PaletteRedBrush}"/>
-                    </ui:Button>
-                </StackPanel>
-                
-            </StackPanel>
-
-        </DataTemplate>
-
-        <DataTemplate x:Key="ResultsTemplate">
-
-            <local:ResultsTemplate DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-
-        </DataTemplate>
-
-        <local:FolderActionStateTemplateSelector x:Key="FolderActionStateTemplateSelector"
-                                                 AnalysingTemplate="{StaticResource AnalysingTemplate}"
-                                                 CompressingTemplate="{StaticResource CompressingTemplate}"
-                                                 IdleTemplate="{StaticResource IdleTemplate}"
-                                                 ResultsTemplate="{StaticResource ResultsTemplate}" />
-
-    </UserControl.Resources>
     <Grid MinWidth="20"
           Margin="5 0 10 0" VerticalAlignment="Stretch">
 
@@ -174,14 +121,116 @@
                    BorderThickness="0"  />
         <ui:DynamicScrollViewer Grid.Row="2"
                                 CanContentScroll="True" Focusable="False" IsDeferredScrollingEnabled="False">
+            <Grid Margin="20 0">
+                <!-- ===== 空闲状态 ===== -->
+                <local:PendingCompression
+                    Visibility="{Binding IsIdle, Converter={StaticResource BoolToVisConverter}}"
+                    DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
 
+                <!-- ===== 分析中状态 ===== -->
+                <ui:ProgressRing
+                    Visibility="{Binding IsAnalysing, Converter={StaticResource BoolToVisConverter}}"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    IsIndeterminate="True" />
 
-            <ContentControl Content="{Binding Folder.FolderActionState}" Margin="20 0"
-                            VerticalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                            ContentTemplateSelector="{StaticResource FolderActionStateTemplateSelector}" />
+                <!-- ===== 压缩中状态（进度条+性能监控） ===== -->
+                <StackPanel Visibility="{Binding IsCompressing, Converter={StaticResource BoolToVisConverter}}"
+                            Margin="0,30"
+                            d:DataContext="{d:DesignInstance Type=local:FolderViewModel}"
+                            DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <TextBlock Text="{Binding Folder.FolderActionState}"
+                               HorizontalAlignment="Left"
+                               FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Margin="0 5 0 0"
+                               Text="{Binding CompressionProgressFile, Mode=OneWay, Converter={StaticResource TokenisedFolderPathConverter}}"
+                               HorizontalAlignment="Left" Foreground="{StaticResource AccentFillColorDisabledBrush}"
+                               TextTrimming="CharacterEllipsis" />
 
+                    <!-- 进度仪表盘 -->
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
 
+                        <!-- 左：文件总数 -->
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,15,0">
+                            <TextBlock Text="{Binding Folder.AnalysisResults.Count, StringFormat='共 {0} 个文件'}"
+                                       FontSize="12" Foreground="{StaticResource AccentFillColorDisabledBrush}" />
+                        </StackPanel>
 
+                        <!-- 中：进度条 -->
+                        <ProgressBar Grid.Column="1" Height="26"
+                                     Margin="0 10 0 10"
+                                     Background="{StaticResource CardBackground}"
+                                     Foreground="#92F1AB"
+                                     Value="{Binding CompressionProgress, Mode=OneWay}"
+                                     Maximum="100" />
+
+                        <!-- 右：百分比 -->
+                        <TextBlock Grid.Column="2" Margin="10,0,0,0"
+                                   Text="{Binding CompressionProgress, StringFormat='{}{0}%'}"
+                                   FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"
+                                   Foreground="#92F1AB" />
+                    </Grid>
+
+                    <!-- 性能监控卡片组 -->
+                    <WrapPanel Visibility="{Binding AppSettings.EnablePerformanceMonitor, Converter={StaticResource BoolToVisConverter}}"
+                               Margin="0,15,0,0" HorizontalAlignment="Center" Orientation="Horizontal">
+
+                        <!-- CPU -->
+                        <ui:Card Width="120" Height="60" Margin="0,0,8,0"
+                                 Padding="8" Background="#30FFFFFF" BorderThickness="0"
+                                 Visibility="{Binding CpuPercent, Converter={StaticResource ZeroCountToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="CPU" FontSize="11" Foreground="#80FFFFFF" />
+                                <TextBlock FontSize="16" FontWeight="SemiBold"
+                                           Foreground="{Binding CpuPercent, Converter={StaticResource ProgressBarColorConverter}}"
+                                           Text="{Binding CpuPercent, StringFormat='{}{0:F1}%'}" />
+                            </StackPanel>
+                        </ui:Card>
+
+                        <!-- 内存 -->
+                        <ui:Card Width="120" Height="60" Margin="0,0,8,0"
+                                 Padding="8" Background="#30FFFFFF" BorderThickness="0"
+                                 Visibility="{Binding MemoryMB, Converter={StaticResource ZeroCountToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="内存" FontSize="11" Foreground="#80FFFFFF" />
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#92F1AB"
+                                           Text="{Binding MemoryMB, StringFormat='{}{0:F0} MB'}" />
+                            </StackPanel>
+                        </ui:Card>
+
+                        <!-- 磁盘读取 -->
+                        <ui:Card Width="120" Height="60" Margin="0,0,8,0"
+                                 Padding="8" Background="#30FFFFFF" BorderThickness="0"
+                                 Visibility="{Binding DiskReadMBs, Converter={StaticResource ZeroCountToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="磁盘读取" FontSize="11" Foreground="#80FFFFFF" />
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#92F1AB"
+                                           Text="{Binding DiskReadMBs, StringFormat='{}{0:F1} MB/s'}" />
+                            </StackPanel>
+                        </ui:Card>
+
+                        <!-- 磁盘写入 -->
+                        <ui:Card Width="120" Height="60" Margin="0,0,8,0"
+                                 Padding="8" Background="#30FFFFFF" BorderThickness="0"
+                                 Visibility="{Binding DiskWriteMBs, Converter={StaticResource ZeroCountToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="磁盘写入" FontSize="11" Foreground="#80FFFFFF" />
+                                <TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#92F1AB"
+                                           Text="{Binding DiskWriteMBs, StringFormat='{}{0:F1} MB/s'}" />
+                            </StackPanel>
+                        </ui:Card>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- ===== 压缩完成状态 ===== -->
+                <local:ResultsTemplate
+                    Visibility="{Binding IsResults, Converter={StaticResource BoolToVisConverter}}"
+                    DataContext="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+            </Grid>
         </ui:DynamicScrollViewer>
 
 
